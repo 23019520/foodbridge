@@ -5,7 +5,6 @@ import { formatCurrency } from '@/utils/formatCurrency';
 import { LISTING_STATUS_COLORS, LISTING_STATUS_LABELS } from '@/utils/constants';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import Badge from '@/components/common/Badge';
 import { clsx } from 'clsx';
 
 interface ListingCardProps {

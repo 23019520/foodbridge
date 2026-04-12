@@ -10,7 +10,6 @@ import { CATEGORY_ICONS, LISTING_STATUS_COLORS, LISTING_STATUS_LABELS } from '@/
 import { PageSpinner } from '@/components/common/Spinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import Button from '@/components/common/Button';
-import Badge from '@/components/common/Badge';
 import Modal from '@/components/common/Modal';
 import CartDrawer from '@/components/orders/CartDrawer';
 import { clsx } from 'clsx';

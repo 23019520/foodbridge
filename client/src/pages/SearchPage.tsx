@@ -3,14 +3,13 @@ import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { useListings } from '@/hooks/useListings';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ListingCategory, ListingFilters } from '@/types/listing.types';
-import { CATEGORIES, SORT_OPTIONS } from '@/utils/constants';
-import ListingGrid from '@/components/listings/ListingGrid';
+import { SORT_OPTIONS } from '@/utils/constants';import ListingGrid from '@/components/listings/ListingGrid';
 import CategoryFilter from '@/components/listings/CategoryFilter';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import { PageSpinner } from '@/components/common/Spinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
-import { clsx } from 'clsx';
+
 
 export default function SearchPage() {
   const [search, setSearch] = useState('');

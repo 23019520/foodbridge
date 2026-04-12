@@ -5,8 +5,7 @@ import Button from '@/components/common/Button';
 import { Link } from 'react-router-dom';
 
 export default function CartDrawer() {
-  const { items, totalAmount, removeItem, updateQuantity, producerId } = useCart();
-
+const { items, totalAmount, removeItem, updateQuantity } = useCart();
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">

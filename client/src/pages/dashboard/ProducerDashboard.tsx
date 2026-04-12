@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { useMyListings, useDeleteListing, useCreateListing, useUpdateListing } from '@/hooks/useListings';
+import { useMyListings, useDeleteListing } from '@/hooks/useListings';
 import { useReceivedOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/utils/formatCurrency';
-import { Listing } from '@/types/listing.types';
-import { OrderStatus } from '@/types/order.types';
-import { LISTING_STATUS_COLORS, LISTING_STATUS_LABELS, ORDER_STATUS_LABELS } from '@/utils/constants';
+import { LISTING_STATUS_COLORS, LISTING_STATUS_LABELS } from '@/utils/constants';
 import StatCard from '@/components/dashboard/StatCard';
 import OrderCard from '@/components/orders/OrderCard';
 import Button from '@/components/common/Button';
