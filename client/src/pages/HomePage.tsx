@@ -39,12 +39,12 @@ export default function HomePage() {
           {!user && (
             <Link to="/register">
               <Button
-  size="lg"
-  variant="outline"
-  className="!bg-white !text-primary-800 hover:!bg-primary-50 border-white font-semibold"
->
-  Sell your food
-</Button>
+              size="lg"
+              variant="outline"
+              className="!bg-white !text-primary-800 hover:!bg-primary-50 border-white font-semibold"
+            >
+              Sell your food
+            </Button>
             </Link>
           )}
         </div>

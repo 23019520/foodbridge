@@ -4,6 +4,7 @@ import { formatCurrency } from '@/utils/formatCurrency';
 import { PageSpinner } from '@/components/common/Spinner';
 import Button from '@/components/common/Button';
 import { CheckCircle } from 'lucide-react';
+
 export default function OrderConfirmPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const { data: order, isLoading } = useOrder(orderId!);

@@ -3,10 +3,13 @@ import { useMyListings, useDeleteListing } from '@/hooks/useListings';
 import { useReceivedOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/utils/formatCurrency';
+import { Listing } from '@/types/listing.types';
 import { LISTING_STATUS_COLORS, LISTING_STATUS_LABELS } from '@/utils/constants';
 import StatCard from '@/components/dashboard/StatCard';
 import OrderCard from '@/components/orders/OrderCard';
+import ListingForm from '@/components/listings/ListingForm';
 import Button from '@/components/common/Button';
+import Modal from '@/components/common/Modal';
 import { PageSpinner } from '@/components/common/Spinner';
 import { EmptyState } from '@/components/common/ErrorMessage';
 import { Plus, Pencil, Trash2, Package, ShoppingBag, DollarSign } from 'lucide-react';
@@ -17,11 +20,15 @@ type Tab = 'listings' | 'orders';
 export default function ProducerDashboard() {
   const { user } = useAuth();
   const [tab, setTab] = useState<Tab>('listings');
+  const [formState, setFormState] = useState<null | 'create' | Listing>(null);
 
   const { data: listings, isLoading: listingsLoading } = useMyListings();
   const { data: orders, isLoading: ordersLoading } = useReceivedOrders();
   const { mutate: deleteListing, isPending: deleting } = useDeleteListing();
   const { mutate: updateStatus } = useUpdateOrderStatus();
+
+  const isEditMode = formState !== null && formState !== 'create';
+  const modalTitle = formState === 'create' ? 'Add new listing' : 'Edit listing';
 
   const pendingOrders = orders?.filter((o) => o.status === 'pending') ?? [];
   const activeListings = listings?.filter((l) => l.status === 'available') ?? [];
@@ -91,17 +98,26 @@ export default function ProducerDashboard() {
             <Button
               size="sm"
               leftIcon={<Plus className="w-4 h-4" />}
-              onClick={() => alert('Listing form coming soon — implement with the ListingForm component')}
+              onClick={() => setFormState('create')}
             >
               Add listing
             </Button>
           </div>
 
           {listingsLoading && <PageSpinner />}
-          {listings && listings.length === 0 && (
+          {!listingsLoading && listings?.length === 0 && (
             <EmptyState
               title="No listings yet"
-              description="Add your first product to start selling."
+              description="Add your first product so customers can find you."
+              action={
+                <Button
+                  size="sm"
+                  leftIcon={<Plus className="w-4 h-4" />}
+                  onClick={() => setFormState('create')}
+                >
+                  Add your first listing
+                </Button>
+              }
             />
           )}
           {listings && listings.length > 0 && (
@@ -123,11 +139,12 @@ export default function ProducerDashboard() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900 truncate">{listing.title}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       <span className="text-sm text-primary-700 font-medium">{formatCurrency(listing.price)}</span>
                       <span className={clsx('badge text-xs', LISTING_STATUS_COLORS[listing.status])}>
                         {LISTING_STATUS_LABELS[listing.status]}
                       </span>
+                      <span className="text-xs text-gray-400">Qty: {listing.quantity}</span>
                     </div>
                   </div>
 
@@ -136,16 +153,16 @@ export default function ProducerDashboard() {
                     <button
                       className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                       aria-label="Edit listing"
-                      onClick={() => alert(`Edit listing ${listing.id} — implement with the ListingForm component`)}
+                      onClick={() => setFormState(listing)}
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
                     <button
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40"
                       aria-label="Delete listing"
                       disabled={deleting}
                       onClick={() => {
-                        if (window.confirm('Remove this listing?')) deleteListing(listing.id);
+                        if (window.confirm(`Remove "${listing.title}"? This cannot be undone.`)) deleteListing(listing.id);
                       }}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -219,6 +236,23 @@ export default function ProducerDashboard() {
           )}
         </div>
       )}
+
+      {/* Listing form modal */}
+      <Modal
+        isOpen={formState !== null}
+        onClose={() => setFormState(null)}
+        title={modalTitle}
+        size="lg"
+      >
+        {formState !== null && (
+          <ListingForm
+            listing={isEditMode ? (formState as Listing) : undefined}
+            onSuccess={() => setFormState(null)}
+            onCancel={() => setFormState(null)}
+          />
+        )}
+      </Modal>
+
     </div>
   );
 }
