@@ -3,7 +3,6 @@ import { ShoppingCart, User, LogOut, LayoutDashboard, Menu, X } from 'lucide-rea
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
-import { clsx } from 'clsx';
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
