@@ -1,5 +1,7 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import { z } from 'zod';
+dotenv.config();
+
 
 /**
  * Validates all required environment variables at startup.
