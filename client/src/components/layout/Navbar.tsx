@@ -42,6 +42,10 @@ export default function Navbar() {
                 <LayoutDashboard className="w-4 h-4" />
                 Dashboard
               </Link>
+              <Link to="/profile/edit" className="px-3 py-2 text-sm text-gray-600 hover:text-primary-700 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-1.5">
+  <User className="w-4 h-4" />
+  Edit profile
+</Link>
               <button onClick={handleLogout} className="px-3 py-2 text-sm text-gray-600 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1.5">
                 <LogOut className="w-4 h-4" />
                 Log out

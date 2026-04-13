@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
+import ResetPasswordPage from '@/pages/ResetPasswordPage';
+import EditProfilePage from '@/pages/EditProfilePage';
 
 // Layout
 import PageWrapper from '@/components/layout/PageWrapper';
@@ -43,6 +46,13 @@ function App() {
             {/* Auth routes — no Navbar/Footer */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route element={<ProtectedRoute allowedRoles={['consumer', 'producer', 'admin']} />}>
+  <Route element={<PageWrapper />}>
+    <Route path="/profile/edit" element={<EditProfilePage />} />
+  </Route>
+</Route>
 
             {/* Protected consumer routes */}
             <Route element={<ProtectedRoute allowedRoles={['consumer']} />}>
