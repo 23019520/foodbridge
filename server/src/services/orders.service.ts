@@ -72,9 +72,9 @@ export const placeOrder = async (consumerId: string, data: CreateOrderInput) => 
   // Fetch consumer and producer details for emails
   const peopleResult = await query(
     `SELECT id, name, email FROM users WHERE id = ANY($1)`,
-    [[data.consumer_id, data.producer_id]]
+    [[consumerId, data.producer_id]]
   );
-  const consumer = peopleResult.rows.find((u) => u.id === data.consumer_id);
+  const consumer = peopleResult.rows.find((u) => u.id === consumerId);
   const producer = peopleResult.rows.find((u) => u.id === data.producer_id);
 
   if (consumer && producer) {
