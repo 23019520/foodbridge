@@ -29,7 +29,8 @@ export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState('');
-  const token = searchParams.get('token');
+  const rawToken = searchParams.get('token');
+const token = rawToken ? decodeURIComponent(rawToken) : null;
 
   const {
     register,
