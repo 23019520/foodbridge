@@ -12,6 +12,7 @@ import orderRoutes from './routes/orders.routes';
 import userRoutes from './routes/users.routes';
 import uploadRoutes from './routes/upload.routes';
 import adminRoutes from './routes/admin.routes';
+import reviewRoutes from './routes/reviews.routes';
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use(`${API_PREFIX}/orders`, orderRoutes);
 app.use(`${API_PREFIX}/users`, userRoutes);
 app.use(`${API_PREFIX}/upload`, uploadRoutes);
 app.use(`${API_PREFIX}/admin`, adminRoutes);
+app.use(`${API_PREFIX}/reviews`, reviewRoutes);
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 

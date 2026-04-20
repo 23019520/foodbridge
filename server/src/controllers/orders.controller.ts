@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { findOrderById, findOrdersByConsumer, findOrdersByProducer, updateOrderStatus } from '../models/order.model';
 import { placeOrder, completeOrder } from '../services/orders.service';
+import { sendOrderStatusUpdateToConsumer } from '../services/email.service';
+import { query } from '../config/database';
 import { AppError } from '../middleware/errorHandler';
 import { sendSuccess } from '../utils/apiResponse';
 
@@ -60,6 +62,20 @@ export const changeOrderStatus = async (req: Request, res: Response, next: NextF
 
     const order = await updateOrderStatus(id, status);
     if (!order) throw new AppError('Order not found.', 404);
+
+    // Notify consumer of status change
+    const peopleResult = await query(
+      `SELECT u.id, u.name, u.email FROM users u WHERE u.id = ANY($1)`,
+      [[order.consumer_id, order.producer_id]]
+    );
+    const consumer = peopleResult.rows.find((u: { id: string }) => u.id === order.consumer_id);
+    const producer = peopleResult.rows.find((u: { id: string }) => u.id === order.producer_id);
+    if (consumer && producer) {
+      sendOrderStatusUpdateToConsumer(
+        consumer.email, consumer.name, producer.name, order.reference, status
+      );
+    }
+
     sendSuccess(res, { order }, 200, `Order status updated to ${status}.`);
   } catch (error) {
     next(error);

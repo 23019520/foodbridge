@@ -9,17 +9,20 @@ import Button from '@/components/common/Button';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import { Lock } from 'lucide-react';
 
-const schema = z.object({
-  password: z
-    .string()
-    .min(8, 'At least 8 characters')
-    .regex(/[A-Z]/, 'Must include an uppercase letter')
-    .regex(/[0-9]/, 'Must include a number'),
-  confirmPassword: z.string(),
-}).refine((d) => d.password === d.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+const schema = z
+  .object({
+    password: z
+      .string()
+      .min(8, 'At least 8 characters')
+      .regex(/[A-Z]/, 'Must include an uppercase letter')
+      .regex(/[0-9]/, 'Must include a number'),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
 type FormData = z.infer<typeof schema>;
 
 export default function ResetPasswordPage() {
@@ -28,17 +31,23 @@ export default function ResetPasswordPage() {
   const [serverError, setServerError] = useState('');
   const token = searchParams.get('token');
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   if (!token) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="text-center">
-          <p className="text-gray-700 font-medium mb-3">Invalid or expired reset link.</p>
+        <div className="text-center card p-8 max-w-sm w-full">
+          <p className="text-2xl mb-3">🔗</p>
+          <p className="font-semibold text-gray-900 mb-2">Invalid reset link</p>
+          <p className="text-sm text-gray-500 mb-4">
+            This link is invalid or has expired. Request a new one.
+          </p>
           <Link to="/forgot-password">
-            <Button variant="secondary">Request a new link</Button>
+            <Button variant="secondary" fullWidth>Request a new link</Button>
           </Link>
         </div>
       </div>
@@ -49,7 +58,9 @@ export default function ResetPasswordPage() {
     setServerError('');
     try {
       await api.post('/auth/reset-password', { token, password: data.password });
-      navigate('/login', { state: { message: 'Password updated! Please log in.' } });
+      navigate('/login', {
+        state: { message: 'Password updated successfully. Please log in with your new password.' },
+      });
     } catch (err) {
       setServerError((err as Error).message);
     }
@@ -63,11 +74,15 @@ export default function ResetPasswordPage() {
             <span className="text-3xl">🌿</span> FoodBridge
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-gray-900">Choose a new password</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Make it at least 8 characters with one uppercase and one number
+          </p>
         </div>
 
         <div className="card p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
             {serverError && <ErrorMessage message={serverError} />}
+
             <Input
               label="New password"
               type="password"
@@ -87,6 +102,7 @@ export default function ResetPasswordPage() {
               required
               {...register('confirmPassword')}
             />
+
             <Button type="submit" fullWidth isLoading={isSubmitting}>
               Update password
             </Button>

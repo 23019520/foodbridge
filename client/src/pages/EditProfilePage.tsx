@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,8 +9,7 @@ import { uploadImage } from '@/services/upload.service';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import ErrorMessage from '@/components/common/ErrorMessage';
-import { User, Phone, MapPin, Briefcase, Camera } from 'lucide-react';
-import { useRef } from 'react';
+import { User, Phone, MapPin, Briefcase, Camera, CheckCircle } from 'lucide-react';
 
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -25,11 +24,17 @@ export default function EditProfilePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState('');
+  const [saved, setSaved] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url ?? '');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: user?.name ?? '',
@@ -46,6 +51,7 @@ export default function EditProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingAvatar(true);
+    setServerError('');
     try {
       const result = await uploadImage(file);
       setAvatarUrl(result.url);
@@ -53,30 +59,59 @@ export default function EditProfilePage() {
       setServerError('Failed to upload photo. Please try again.');
     } finally {
       setUploadingAvatar(false);
+      if (fileRef.current) fileRef.current.value = '';
     }
   };
 
   const onSubmit = async (data: FormData) => {
     setServerError('');
     try {
-      await updateProfile({ ...data, avatar_url: avatarUrl || undefined });
-      const dashPath = user?.role === 'producer' ? '/dashboard/producer' : '/dashboard/consumer';
-      navigate(dashPath);
+      await updateProfile({
+        ...data,
+        avatar_url: avatarUrl || undefined,
+      });
+      setSaved(true);
+      setTimeout(() => {
+        const dashPath =
+          user?.role === 'producer'
+            ? '/dashboard/producer'
+            : '/dashboard/consumer';
+        navigate(dashPath);
+      }, 1200);
     } catch (err) {
       setServerError((err as Error).message);
     }
   };
 
+  const dashPath =
+    user?.role === 'producer' ? '/dashboard/producer' : '/dashboard/consumer';
+
   return (
     <div className="max-w-lg mx-auto py-8 px-4">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Edit profile</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Edit profile</h1>
+        <button
+          onClick={() => navigate(dashPath)}
+          className="text-sm text-gray-500 hover:text-gray-700"
+        >
+          Cancel
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
         {serverError && <ErrorMessage message={serverError} />}
 
+        {/* Success flash */}
+        {saved && (
+          <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700">
+            <CheckCircle className="w-4 h-4 shrink-0" />
+            Profile saved! Redirecting…
+          </div>
+        )}
+
         {/* Avatar */}
         <div className="flex items-center gap-4">
-          <div className="relative w-20 h-20 rounded-full bg-primary-100 overflow-hidden shrink-0">
+          <div className="relative w-20 h-20 rounded-full overflow-hidden shrink-0 bg-primary-100">
             {avatarUrl ? (
               <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
             ) : (
@@ -99,9 +134,9 @@ export default function EditProfilePage() {
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={uploadingAvatar}
-              className="text-sm text-primary-700 font-medium hover:underline"
+              className="text-sm text-primary-700 font-medium hover:underline disabled:opacity-50"
             >
-              {uploadingAvatar ? 'Uploading…' : 'Change photo'}
+              {uploadingAvatar ? 'Uploading…' : avatarUrl ? 'Change photo' : 'Add profile photo'}
             </button>
             <p className="text-xs text-gray-400 mt-0.5">JPG, PNG or WebP · Max 5MB</p>
           </div>
@@ -114,6 +149,7 @@ export default function EditProfilePage() {
           />
         </div>
 
+        {/* Common fields */}
         <Input
           label="Full name"
           leftIcon={<User className="w-4 h-4" />}
@@ -124,6 +160,7 @@ export default function EditProfilePage() {
         <Input
           label="Phone number"
           type="tel"
+          autoComplete="tel"
           leftIcon={<Phone className="w-4 h-4" />}
           error={errors.phone?.message}
           {...register('phone')}
@@ -136,41 +173,46 @@ export default function EditProfilePage() {
           {...register('area')}
         />
 
+        {/* Producer-only fields */}
         {user?.role === 'producer' && (
           <>
-            <Input
-              label="Business / stall name"
-              leftIcon={<Briefcase className="w-4 h-4" />}
-              error={errors.business_name?.message}
-              {...register('business_name')}
-            />
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Bio</label>
-              <textarea
-                rows={3}
-                placeholder="Tell customers about yourself…"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent resize-none"
-                {...register('bio')}
-              />
-              <p className="text-xs text-gray-400 text-right">{bioValue.length}/300</p>
-              {errors.bio && <p className="text-xs text-red-600">{errors.bio.message}</p>}
+            <div className="border-t border-gray-100 pt-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                Seller details
+              </p>
+              <div className="flex flex-col gap-4">
+                <Input
+                  label="Business / stall name"
+                  leftIcon={<Briefcase className="w-4 h-4" />}
+                  error={errors.business_name?.message}
+                  {...register('business_name')}
+                />
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-gray-700">Bio</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Tell customers about yourself and what you sell…"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent resize-none transition-colors"
+                    {...register('bio')}
+                  />
+                  <p className="text-xs text-gray-400 text-right">{bioValue.length}/300</p>
+                  {errors.bio && (
+                    <p className="text-xs text-red-600">{errors.bio.message}</p>
+                  )}
+                </div>
+              </div>
             </div>
           </>
         )}
 
-        <div className="flex gap-3 pt-2">
-          <Button
-            type="button"
-            variant="outline"
-            fullWidth
-            onClick={() => navigate(-1)}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" fullWidth isLoading={isSubmitting}>
-            Save changes
-          </Button>
-        </div>
+        <Button
+          type="submit"
+          fullWidth
+          isLoading={isSubmitting || uploadingAvatar}
+          disabled={!isDirty && avatarUrl === (user?.avatar_url ?? '')}
+        >
+          Save changes
+        </Button>
       </form>
     </div>
   );

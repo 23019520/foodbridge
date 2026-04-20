@@ -3,6 +3,11 @@ import { AppError } from '../middleware/errorHandler';
 import { createOrder, createOrderItems } from '../models/order.model';
 import { createCommission } from '../models/commission.model';
 import { CreateOrderInput } from '../schemas/order.schemas';
+import {
+  sendOrderConfirmationToConsumer,
+  sendNewOrderNotificationToProducer,
+  sendOrderStatusUpdateToConsumer,
+} from './email.service';
 
 /**
  * Places a new order:
@@ -64,6 +69,27 @@ export const placeOrder = async (consumerId: string, data: CreateOrderInput) => 
     orderItems.map((item) => ({ order_id: order.id, ...item }))
   );
 
+  // Fetch consumer and producer details for emails
+  const peopleResult = await query(
+    `SELECT id, name, email FROM users WHERE id = ANY($1)`,
+    [[data.consumer_id, data.producer_id]]
+  );
+  const consumer = peopleResult.rows.find((u) => u.id === data.consumer_id);
+  const producer = peopleResult.rows.find((u) => u.id === data.producer_id);
+
+  if (consumer && producer) {
+    // Send emails non-blocking
+    sendOrderConfirmationToConsumer(
+      consumer.email, consumer.name, producer.name,
+      order.reference, orderItems, order.total_amount, data.delivery_type
+    );
+    sendNewOrderNotificationToProducer(
+      producer.email, producer.name, consumer.name,
+      order.reference, orderItems, order.total_amount,
+      data.contact_number ?? '', data.delivery_type, data.delivery_address
+    );
+  }
+
   return order;
 };
 
@@ -90,6 +116,19 @@ export const completeOrder = async (orderId: string, producerId: string) => {
      WHERE id IN (SELECT listing_id FROM order_items WHERE order_id = $1)`,
     [orderId]
   );
+
+  // Notify consumer
+  const peopleResult = await query(
+    `SELECT id, name, email FROM users WHERE id = ANY($1)`,
+    [[order.consumer_id, order.producer_id]]
+  );
+  const consumer = peopleResult.rows.find((u: { id: string }) => u.id === order.consumer_id);
+  const producer = peopleResult.rows.find((u: { id: string }) => u.id === order.producer_id);
+  if (consumer && producer) {
+    sendOrderStatusUpdateToConsumer(
+      consumer.email, consumer.name, producer.name, order.reference, 'completed'
+    );
+  }
 
   return order;
 };

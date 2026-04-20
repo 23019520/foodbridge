@@ -1,7 +1,4 @@
-import dotenv from 'dotenv';
 import { z } from 'zod';
-dotenv.config();
-
 
 /**
  * Validates all required environment variables at startup.
@@ -20,8 +17,8 @@ const envSchema = z.object({
   CLOUDINARY_API_KEY: z.string().min(1, 'CLOUDINARY_API_KEY is required'),
   CLOUDINARY_API_SECRET: z.string().min(1, 'CLOUDINARY_API_SECRET is required'),
   CLIENT_URL: z.string().url().default('http://localhost:5173'),
-  RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY is required'),
-RESEND_FROM_EMAIL: z.string().email().default('noreply@foodbridge.co.za'),
+  RESEND_API_KEY: z.string().default(''),
+  RESEND_FROM_EMAIL: z.string().default('noreply@foodbridge.co.za'),
 });
 
 const parsed = envSchema.safeParse(process.env);

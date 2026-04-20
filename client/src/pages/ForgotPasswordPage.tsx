@@ -2,54 +2,33 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import api from '@/services/api';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import ErrorMessage from '@/components/common/ErrorMessage';
-import { Lock } from 'lucide-react';
+import { Mail, CheckCircle } from 'lucide-react';
 
 const schema = z.object({
-  password: z
-    .string()
-    .min(8, 'At least 8 characters')
-    .regex(/[A-Z]/, 'Must include an uppercase letter')
-    .regex(/[0-9]/, 'Must include a number'),
-  confirmPassword: z.string(),
-}).refine((d) => d.password === d.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
+  email: z.string().email('Please enter a valid email address'),
 });
 type FormData = z.infer<typeof schema>;
 
-export default function ResetPasswordPage() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+export default function ForgotPasswordPage() {
+  const [sent, setSent] = useState(false);
   const [serverError, setServerError] = useState('');
-  const token = searchParams.get('token');
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
-
-  if (!token) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="text-center">
-          <p className="text-gray-700 font-medium mb-3">Invalid or expired reset link.</p>
-          <Link to="/forgot-password">
-            <Button variant="secondary">Request a new link</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: FormData) => {
     setServerError('');
     try {
-      await api.post('/auth/reset-password', { token, password: data.password });
-      navigate('/login', { state: { message: 'Password updated! Please log in.' } });
+      await api.post('/auth/forgot-password', data);
+      setSent(true);
     } catch (err) {
       setServerError((err as Error).message);
     }
@@ -62,36 +41,49 @@ export default function ResetPasswordPage() {
           <Link to="/" className="inline-flex items-center gap-2 text-primary-800 font-bold text-xl">
             <span className="text-3xl">🌿</span> FoodBridge
           </Link>
-          <h1 className="mt-4 text-2xl font-bold text-gray-900">Choose a new password</h1>
+          <h1 className="mt-4 text-2xl font-bold text-gray-900">Reset your password</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Enter your email and we'll send you a reset link
+          </p>
         </div>
 
         <div className="card p-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
-            {serverError && <ErrorMessage message={serverError} />}
-            <Input
-              label="New password"
-              type="password"
-              autoComplete="new-password"
-              leftIcon={<Lock className="w-4 h-4" />}
-              hint="Min 8 characters, one uppercase, one number"
-              error={errors.password?.message}
-              required
-              {...register('password')}
-            />
-            <Input
-              label="Confirm new password"
-              type="password"
-              autoComplete="new-password"
-              leftIcon={<Lock className="w-4 h-4" />}
-              error={errors.confirmPassword?.message}
-              required
-              {...register('confirmPassword')}
-            />
-            <Button type="submit" fullWidth isLoading={isSubmitting}>
-              Update password
-            </Button>
-          </form>
+          {sent ? (
+            <div className="flex flex-col items-center gap-3 py-4 text-center">
+              <CheckCircle className="w-12 h-12 text-primary-600" strokeWidth={1.5} />
+              <p className="font-semibold text-gray-900">Check your email</p>
+              <p className="text-sm text-gray-500">
+                If an account exists for that email, a reset link has been sent. Check your spam folder too.
+              </p>
+              <Link to="/login" className="mt-2">
+                <Button variant="secondary" size="sm">Back to login</Button>
+              </Link>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
+              {serverError && <ErrorMessage message={serverError} />}
+              <Input
+                label="Email address"
+                type="email"
+                autoComplete="email"
+                leftIcon={<Mail className="w-4 h-4" />}
+                error={errors.email?.message}
+                required
+                {...register('email')}
+              />
+              <Button type="submit" fullWidth isLoading={isSubmitting}>
+                Send reset link
+              </Button>
+            </form>
+          )}
         </div>
+
+        <p className="text-center text-sm text-gray-500 mt-4">
+          Remembered it?{' '}
+          <Link to="/login" className="text-primary-700 font-medium hover:underline">
+            Log in
+          </Link>
+        </p>
       </div>
     </div>
   );

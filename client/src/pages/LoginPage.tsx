@@ -7,13 +7,12 @@ import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import { useState } from 'react';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, CheckCircle } from 'lucide-react';
 
 const schema = z.object({
   email: z.string().email('Please enter a valid email'),
   password: z.string().min(1, 'Password is required'),
 });
-
 type FormData = z.infer<typeof schema>;
 
 export default function LoginPage() {
@@ -22,8 +21,8 @@ export default function LoginPage() {
   const location = useLocation();
   const [serverError, setServerError] = useState('');
 
-  // Redirect back to the page they tried to visit
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/';
+  const successMessage = (location.state as { message?: string })?.message;
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -42,7 +41,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 text-primary-800 font-bold text-xl">
             <span className="text-3xl">🌿</span> FoodBridge
@@ -50,6 +48,13 @@ export default function LoginPage() {
           <h1 className="mt-4 text-2xl font-bold text-gray-900">Welcome back</h1>
           <p className="text-sm text-gray-500 mt-1">Log in to your account</p>
         </div>
+
+        {successMessage && (
+          <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700 mb-4">
+            <CheckCircle className="w-4 h-4 shrink-0" />
+            {successMessage}
+          </div>
+        )}
 
         <div className="card p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
@@ -65,20 +70,21 @@ export default function LoginPage() {
               {...register('email')}
             />
 
-            <Input
-              label="Password"
-              type="password"
-              autoComplete="current-password"
-              leftIcon={<Lock className="w-4 h-4" />}
-              error={errors.password?.message}
-              required
-              {...register('password')}
-            />
-
-            <div className="flex justify-end">
-              <Link to="/forgot-password" className="text-xs text-primary-700 hover:underline">
-                Forgot password?
-              </Link>
+            <div className="flex flex-col gap-1">
+              <Input
+                label="Password"
+                type="password"
+                autoComplete="current-password"
+                leftIcon={<Lock className="w-4 h-4" />}
+                error={errors.password?.message}
+                required
+                {...register('password')}
+              />
+              <div className="flex justify-end">
+                <Link to="/forgot-password" className="text-xs text-primary-700 hover:underline mt-1">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
             <Button type="submit" fullWidth isLoading={isSubmitting} className="mt-1">

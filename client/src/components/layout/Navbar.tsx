@@ -3,6 +3,7 @@ import { ShoppingCart, User, LogOut, LayoutDashboard, Menu, X } from 'lucide-rea
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
+import { clsx } from 'clsx';
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -38,14 +39,14 @@ export default function Navbar() {
           </Link>
           {isAuthenticated ? (
             <>
+              <Link to="/profile/edit" className="px-3 py-2 text-sm text-gray-600 hover:text-primary-700 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-1.5">
+                <User className="w-4 h-4" />
+                Profile
+              </Link>
               <Link to={dashboardPath} className="px-3 py-2 text-sm text-gray-600 hover:text-primary-700 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-1.5">
                 <LayoutDashboard className="w-4 h-4" />
                 Dashboard
               </Link>
-              <Link to="/profile/edit" className="px-3 py-2 text-sm text-gray-600 hover:text-primary-700 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-1.5">
-  <User className="w-4 h-4" />
-  Edit profile
-</Link>
               <button onClick={handleLogout} className="px-3 py-2 text-sm text-gray-600 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1.5">
                 <LogOut className="w-4 h-4" />
                 Log out
